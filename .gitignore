@@ -1,0 +1,5 @@
+data/./*
+*.ipynb
+logs/*/
+dags/*/
+dags/__pycache__
