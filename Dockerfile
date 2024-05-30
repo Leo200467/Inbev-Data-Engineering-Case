@@ -14,6 +14,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-e", "-u", "-x", "-c"]
 WORKDIR $AIRFLOW_HOME
 
 RUN sudo /usr/local/bin/python -m pip install --upgrade pip
+RUN sudo /usr/local/bin/python -m pip install pyspark
+RUN sudo /usr/local/bin/python -m pip install py4j
+RUN sudo /usr/local/bin/python -m pip install apache-airflow-providers-apache-spark
+RUN sudo /usr/local/bin/python -m pip install unidecode
 # RUN pip uninstall  --yes azure-storage && pip install -U azure-storage-blob apache-airflow-providers-microsoft-azure==1.1.0
 # RUN pip install --no-cache-dir -r requirements.txt
 # RUN pip install azure-storage-file-datalake

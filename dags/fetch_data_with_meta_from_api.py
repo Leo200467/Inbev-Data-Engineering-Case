@@ -1,6 +1,8 @@
 from airflow import DAG
-from airflow.utils.dates import days_ago, timedelta
+from airflow.utils.dates import days_ago
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.utils.trigger_rule import TriggerRule
 import requests
 from urllib.parse import urlencode
 import csv
@@ -97,3 +99,11 @@ with DAG(
             key='error_msg', value=f"Error fetching brewery data: {context}"
         )
     )
+
+    trigger_process = TriggerDagRunOperator(
+        task_id='trigger', 
+        trigger_rule=TriggerRule.ALL_SUCCESS, 
+        trigger_dag_id="data_transformation_silver_layer",
+        reset_dag_run=True)
+    
+    fetch_brewery_data_task >> trigger_process
