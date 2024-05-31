@@ -2,12 +2,13 @@ from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.operators.python import PythonOperator
 from pyspark.sql import SparkSession
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lower, regexp_replace, translate, trim
 import os
 import unicodedata
 import sys
 import pytz
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.utils.trigger_rule import TriggerRule
 
 # Configure DAG
 default_args = {
@@ -20,12 +21,12 @@ default_args = {
 }
 
 # Define timezone offset for UTC-3
-timezone = pytz.timezone('America/Sao_Paulo')  # Adjust based on your specific location
+timezone = pytz.timezone('America/Sao_Paulo')  
 
 with DAG(
-    dag_id='data_transformation_silver_layer',
+    dag_id='data_transformation_to_silver_layer_dag',
     default_args=default_args,
-    schedule_interval="@daily",  # Check for new data every 10 minutes
+    schedule_interval="@daily", 
 ) as dag:
 
     def make_trans():
@@ -57,13 +58,13 @@ with DAG(
     def get_most_recent_bronze_directory():
 
         folders = [folder for folder in os.listdir(bronze_directory) if folder.startswith("brewery_data")]
-        folders.sort(reverse=True)  # Sort folders in descending order (newest first)
+        folders.sort(reverse=True)
 
         for folder in folders:
             folder_path = os.path.join(bronze_directory, folder)
             csv_files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
             if csv_files:
-                return folder_path  # Return the first directory with CSV files
+                return folder_path
 
         raise Exception("No directory with CSV files found in the bronze directory.")
 
@@ -78,7 +79,7 @@ with DAG(
         os.makedirs(silver_data_folder, exist_ok=True)  # Create folder if it doesn't exist
         
         # Initialize SparkSession
-        spark = SparkSession.builder.appName('BreweryDataTransformation').getOrCreate()
+        spark = SparkSession.builder.appName('BrewerySilverDataTransformation').getOrCreate()
 
         print(kwargs)
         print(*op_args)
@@ -137,4 +138,10 @@ with DAG(
         )
     )
 
-    get_most_recent_bronze_directory_task >> transform_brewery_data_task
+    trigger_gold_layer_agg_dag = TriggerDagRunOperator(
+        task_id='trigger', 
+        trigger_rule=TriggerRule.ALL_SUCCESS, 
+        trigger_dag_id="creating_agg_view_gold_data_dag",
+        reset_dag_run=True)
+
+    get_most_recent_bronze_directory_task >> transform_brewery_data_task >> trigger_gold_layer_agg_dag

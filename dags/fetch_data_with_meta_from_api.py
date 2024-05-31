@@ -103,7 +103,7 @@ with DAG(
     trigger_process = TriggerDagRunOperator(
         task_id='trigger', 
         trigger_rule=TriggerRule.ALL_SUCCESS, 
-        trigger_dag_id="data_transformation_silver_layer",
+        trigger_dag_id="data_transformation_to_silver_layer_dag",
         reset_dag_run=True)
     
     fetch_brewery_data_task >> trigger_process
