@@ -38,7 +38,6 @@ The following diagram represents the project architecture and its components:
     3. The dataset has `name`, `city` and `state` values with special characters, translation and replacement will also be necessary.
 
 #### Data Transformation
-* Data Cleansing and Schema Enforcement: Implementing data cleaning and schema enforcement in the silver layer ensures data quality and consistency for analytical purposes. Defining a more robust schema with data validation rules could further enhance data integrity.
 * Data Cleansing: Implement data cleaning in the silver layer ensures data quality and consistency for analytical purposes.
 * Partitioning: Partitioning data by country and state in the silver layer optimizes query performance in the gold layer, allowing for faster retrieval based on location. Additional partitioning by other relevant dimensions (e.g., brewery type) could be considered depending on anticipated analytical needs.
 
@@ -82,7 +81,7 @@ Inbev-Data-Engineering-Case/
 
 ![image](/images/project-overview.svg)
 
-1. Apache Airflow starts the ["fetch_data_with_meta_from_api"](/dags/fetch_data_with_meta_from_api.py). This DAG is responsible for extracting data from the Open Brewery DB API, starting from the Metadata endpoint `ttps://api.openbrewerydb.org/v1/breweries/meta`. The reason behind this is simple: Metadata offers information about total data available and provides a starting point for quality testing: we should always have the number of files equal to the total of objects divided by itens per_page requested. The DAG proceeds to call the `https://api.openbrewerydb.org/v1/breweries` endpoint, using the `per_page=200` parameter and a loop for getting each page.
+1. Apache Airflow starts the ["fetch_data_with_meta_from_api"](/dags/fetch_data_with_meta_from_api.py). This DAG is responsible for extracting data from the Open Brewery DB API, starting from the Metadata endpoint `ttps://api.openbrewerydb.org/v1/breweries/meta`. The reason behind this is simple: metadata offers information about total data available and provides a starting point for quality testing, we should always have the number of files equal to the total of objects divided by itens per_page requested. The DAG proceeds to call the `https://api.openbrewerydb.org/v1/breweries` endpoint, using the `per_page=200` parameter and a loop for getting each page.
 2. In the same DAG, another component is responsible for saving each page data to the bronze layer. Each chunk is saved as a CSV inside the bronze layer in a named folder `brewery_data_{execution date}` (e.g. `brewery_data_2024-05-31-17-36`). The end of this task triggers the next DAG.
 3. The following step is the ["data_transformations_bronze_to_silver"](/dags/data_transformations_bronze_to_silver.py) DAG. This is responsible for getting the most recent file folder in bronze layer into a Spark Dataframe and proceed with cleaning, transformations and formatting. The transformations that applied are:
     * Column selection: Only some columns were selected and keept in the dataset.
@@ -92,7 +91,7 @@ Inbev-Data-Engineering-Case/
     * General character replacement and accents removal were done using `unidecode` package.
 The same DAG writes the Dataframe into the silver layer, using Parquet as a format and partitioning by `country` and `state`.
 
-4. Finnaly, the ["gold_data_aggregation"](/dags/gold_data_aggregation.py) DAG starts by getting the most recent silver data folder in the layer and using Spark aggregations to create a view by performing a group by operation using `brewery_type`, `country` and `state`, along with aggregation of the quantity of breweries, providing a analytical dataset in the gold layer available in Parquet format, partiotioned by `country`.
+4. Finally, the ["gold_data_aggregation"](/dags/gold_data_aggregation.py) DAG starts by getting the most recent silver data folder in the layer and using Spark aggregations to create a view by performing a group by operation using `brewery_type`, `country` and `state`, along with aggregation of the quantity of breweries, providing a analytical dataset in the gold layer available in Parquet format, partiotioned by `country`.
 
 **Code comments throughout the DAGs provide explanations for data transformations and PySpark operations**
 
@@ -100,16 +99,28 @@ The same DAG writes the Dataframe into the silver layer, using Parquet as a form
 
 **Prerequisites:**
 
-* Docker and Docker Compose installed
+1. Docker and Docker Compose installed
+    * You can get Docker in your computer by following the instructions on ["docs.docker"](https://docs.docker.com/get-docker/)
+2. Terminal of your preference, this project was built using Bash in Windows, or `MINGW64`
 
 **Steps:**
 
-1. Build and start Docker containers using `docker-compose up`.
-2. Access the Airflow web UI (typically at `http://localhost:8080`) and trigger the ["fetch_data_with_meta_from_api"](/dags/fetch_data_with_meta_from_api.py) DAG.
+1. Clone this repository, you can:
+    * Download as ZIP folder directly from GitHub;
+    * Use the Git CLI to clone this repository using `gh repo clone Leo200467/Inbev-Data-Engineering-Case`;
+2. Build and start Docker containers using in your terminal `docker-compose up` in the project folder. You may have to use `sudo` or other administrative power to execute.
+3. Access the Airflow web UI (typically at `http://localhost:8080`) and trigger the ["fetch_data_with_meta_from_api"](/dags/fetch_data_with_meta_from_api.py) DAG.
+4. Wait for all DAGs to complete, there are three DAGs:
+    * fetch_all_brewery_data_dag;
+    * data_transformation_to_silver_layer_dag;
+    * creating_agg_view_gold_data_dag.
+5. With all DAGs completed, you can look for the files in local `data` folder in any layer.
+6. Finally, you can hit your terminal with `docker-compose down` and stop the containers.
 
 ### Monitoring and Alerting
 
-While not explicitly implemented in this project, only Airflow webserver is used as monitoring for DAG success or failure, establishing a monitoring and alerting system for the pipeline is crucial for production environments. This could include:
+In this projectm, only Airflow webserver is used as monitoring for DAG success or failure. 
+While not explicitly implemented in this project, establishing a monitoring and alerting system for the pipeline is crucial for production environments. This could include:
 
 * Airflow Monitoring: Leverage Airflow's built-in monitoring features to track DAG execution status, identify failures, and send alerts by email or messaging apps.
 * Data Quality Checks: Implement data quality checks within the pipeline to ensure data integrity and consistency. Alerts can be triggered if data quality issues are detected.
