@@ -109,7 +109,7 @@ The same DAG writes the Dataframe into the silver layer, using Parquet as a form
     * Download as ZIP folder directly from GitHub;
     * Use the Git CLI to clone this repository using `gh repo clone Leo200467/Inbev-Data-Engineering-Case`;
 2. Build and start Docker containers using in your terminal `docker-compose up --build` in the project folder. You may have to use `sudo` or other administrative power to execute.
-3. Access the Airflow web UI (typically at `http://localhost:8080`) and trigger the ["fetch_data_with_meta_from_api"](/dags/fetch_data_with_meta_from_api.py) DAG.
+3. Access the Airflow web UI (typically at `http://localhost:8080`), login with `user: admin` and `password: admin` and trigger the ["fetch_data_with_meta_from_api"](/dags/fetch_data_with_meta_from_api.py) DAG.
 4. Wait for all DAGs to complete, there are three DAGs:
     * fetch_all_brewery_data_dag;
     * data_transformation_to_silver_layer_dag;
