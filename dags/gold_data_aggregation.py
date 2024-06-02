@@ -7,16 +7,8 @@ from airflow.operators.python import PythonOperator
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 import pytz
+from datetime import datetime
 
-# Configure DAG
-default_args = {
-    'owner': 'airflow',
-    'start_date': days_ago(1),  # Start yesterday
-    'depends_on_past': False,  # Don't wait for previous days to run
-    'email': ['airflow@example.com'],
-    'email_on_failure': True,
-    'email_on_retry': False,
-}
 
 # Define timezone offset for UTC-3
 timezone = pytz.timezone('America/Sao_Paulo')
@@ -76,8 +68,11 @@ def gold_layer_agg_table_creation(**kwargs):
 
 with DAG(
     dag_id='creating_agg_view_gold_data_dag',
-    default_args=default_args,
-    schedule_interval="@daily",
+    start_date=datetime.now(),
+    catchup=True,
+    schedule_interval="@once",
+    tags=['aggregation'],
+    is_paused_upon_creation=False,
 ) as dag:
     
     get_most_recent_silver_directory_task = PythonOperator(

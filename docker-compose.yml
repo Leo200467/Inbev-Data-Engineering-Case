@@ -21,7 +21,6 @@ services:
         env_file:
             - airflow.env
         environment:
-            _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow pyspark py4j apache-airflow-providers-apache-spark}
             AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
         volumes:
             - ./dags:/opt/airflow/dags
@@ -32,7 +31,7 @@ services:
 
     webserver:
         build: .
-        entrypoint: ./scripts/entrypoint.sh
+        entrypoint: /usr/local/entrypoint.sh
         restart: on-failure
         depends_on:
             - scheduler
@@ -40,7 +39,6 @@ services:
         env_file:
             - airflow.env
         environment:
-            _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow pyspark py4j apache-airflow-providers-apache-spark}
             AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
         volumes:
             - ./dags:/opt/airflow/dags
