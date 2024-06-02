@@ -8,12 +8,8 @@ from urllib.parse import urlencode
 import csv
 import pytz
 import os
+from datetime import datetime
 
-# Configure DAG
-default_args = {
-    'owner': 'airflow',
-    'start_date': days_ago(1),  # Start yesterday
-}
 
 # Define timezone offset for UTC-3
 timezone = pytz.timezone('America/Sao_Paulo')  # Adjust based on your specific location
@@ -87,8 +83,11 @@ def fetch_brewery_data_by_page(**kwargs):
 
 with DAG(
     dag_id='fetch_all_brewery_data_dag',
-    default_args=default_args,
-    schedule='@daily',  # Change to your desired schedule
+    start_date=datetime.now(),
+    catchup=True,
+    schedule_interval="@once",
+    tags=['ingestion'],
+    is_paused_upon_creation=False,
 ) as dag:
 
     fetch_brewery_data_task = PythonOperator(

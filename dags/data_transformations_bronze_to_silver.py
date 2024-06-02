@@ -9,24 +9,18 @@ import sys
 import pytz
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.trigger_rule import TriggerRule
-
-# Configure DAG
-default_args = {
-    'owner': 'airflow',
-    'start_date': days_ago(1),  # Start yesterday
-    'depends_on_past': False,  # Don't wait for previous days to run
-    'email': ['airflow@example.com'],
-    'email_on_failure': True,
-    'email_on_retry': False,
-}
+from datetime import datetime
 
 # Define timezone offset for UTC-3
 timezone = pytz.timezone('America/Sao_Paulo')  
 
 with DAG(
     dag_id='data_transformation_to_silver_layer_dag',
-    default_args=default_args,
-    schedule_interval="@daily", 
+    start_date=datetime.now(),
+    catchup=True,
+    schedule_interval="@once",
+    tags=['transformation'],
+    is_paused_upon_creation=False,
 ) as dag:
 
     def make_trans():
