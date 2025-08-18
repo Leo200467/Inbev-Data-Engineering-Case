@@ -87,7 +87,7 @@ with DAG(
     catchup=True,
     schedule_interval="@once",
     tags=['ingestion'],
-    is_paused_upon_creation=False,
+    is_paused_upon_creation=True,
 ) as dag:
 
     fetch_brewery_data_task = PythonOperator(

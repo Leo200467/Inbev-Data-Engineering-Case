@@ -20,7 +20,7 @@ with DAG(
     catchup=True,
     schedule_interval="@once",
     tags=['transformation'],
-    is_paused_upon_creation=False,
+    is_paused_upon_creation=True,
 ) as dag:
 
     def make_trans():

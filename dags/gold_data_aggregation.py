@@ -72,7 +72,7 @@ with DAG(
     catchup=True,
     schedule_interval="@once",
     tags=['aggregation'],
-    is_paused_upon_creation=False,
+    is_paused_upon_creation=True,
 ) as dag:
     
     get_most_recent_silver_directory_task = PythonOperator(
