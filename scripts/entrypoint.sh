@@ -1,13 +1,8 @@
 #!/bin/bash
 
-airflow db upgrade
+echo "Iniciando a migração do banco de dados..."
+airflow db migrate
 
-airflow users create -r Admin -u admin -p admin -e admin@example.com -f admin -l airflow
-# "$_AIRFLOW_WWW_USER_USERNAME" -p "$_AIRFLOW_WWW_USER_PASSWORD"
+echo "Iniciando o Webserver..."
 
-#!/bin/bash
- 
-apt-get update  
-apt-get upgrade -y 
-
-airflow webserver
+exec airflow webserver
